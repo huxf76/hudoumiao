@@ -4,6 +4,7 @@
  */
 package com.hudoumiao.web;
 
+import com.hudoumiao.entity.Customer;
 import com.hudoumiao.service.HuDouService;
 import java.io.IOException;
 import javax.ejb.EJB;
@@ -53,7 +54,8 @@ public class CustomerServlet extends HttpServlet {
 
     private void doLogin(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String name = Tools.getRequestString(request, "name");
-        Long customerId = huDouService.findCustomerId(name, true);
+        Customer customer = huDouService.findCustomer(name, true);
+        Long customerId = customer.getId();
         Tools.setCookieValue(request, response, "customerId", customerId.toString());
         response.setHeader("X-TESTCODE", "/Customer/login");
         Tools.redirect(request.getContextPath() + "/Book/100", request, response);

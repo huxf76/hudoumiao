@@ -56,18 +56,12 @@ public class HuDouService {
         return book;
     }
 
-    public Long findCustomerId(String name, boolean create) {
+    public Customer findCustomer(String name, boolean create) {
         Customer customer = daoBean.findCustomer(name);
-        // if not exist, create one. 
-        if (customer == null) {
-            if (create) {
-                Customer createCustomer = daoTxBean.createCustomer(name);
-                return createCustomer.getId();
-            } else {
-                return null;
-            }
+        if (customer == null && create) {
+            customer = daoTxBean.createCustomer(name);
         }
-        return customer.getId();
+        return customer;
     }
 
     public Customer findCustomer(Long customerId) {
@@ -85,8 +79,15 @@ public class HuDouService {
         if (collection != null) {
             return collection;
         }
+        Long id = collection.getId();
+        if (id == null || id < 1) {
+            return null;
+        }
+        //
         collection = daoBean.findCollection(book, customer);
-        if (collection != null) {
+        if (collection == null) {
+            collection = new BookCollection();
+        } else {
             collection.setTagNames(daoBean.findTagNamesByBookCollection(collection));
         }
         cacheMgr.setBookCollection(book, customer, collection);
