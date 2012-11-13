@@ -77,11 +77,12 @@ public class HuDouService {
     public BookCollection findBookCollection(Book book, Customer customer) {
         BookCollection collection = cacheMgr.getBookCollection(book, customer);
         if (collection != null) {
-            return collection;
-        }
-        Long id = collection.getId();
-        if (id == null || id < 1) {
-            return null;
+            Long id = collection.getId();
+            if (id == null || id < 1) {
+                return null;
+            } else {
+                return collection;
+            }
         }
         //
         collection = daoBean.findCollection(book, customer);
