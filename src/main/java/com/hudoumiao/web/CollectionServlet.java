@@ -23,16 +23,6 @@ public class CollectionServlet extends HttpServlet {
     @EJB
     private HuDouService huDouService;
 
-    /**
-     * Processes requests for both HTTP
-     * <code>GET</code> and
-     * <code>POST</code> methods.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
@@ -51,64 +41,38 @@ public class CollectionServlet extends HttpServlet {
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
-    /**
-     * Handles the HTTP
-     * <code>GET</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         processRequest(request, response);
     }
 
-    /**
-     * Handles the HTTP
-     * <code>POST</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         processRequest(request, response);
-    }
-
-    /**
-     * Returns a short description of the servlet.
-     *
-     * @return a String containing servlet description
-     */
-    @Override
-    public String getServletInfo() {
-        return "Short description";
     }// </editor-fold>
 
     private void doSave(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         Long customerId = Tools.getLong(Tools.getCookieValue(request, response, "customerId"));
-        Long bookId = Tools.getRequestLong(request, "bookId");
-        int score = Tools.getRequestInteger(request, "score").intValue();
-        String tags = Tools.getRequestString(request, "tags");
-        String comment = Tools.getRequestString(request, "comment");
+        Long bookId = Tools.getLong(Tools.getRequestParameter(request, "bookId"));
+        int score = Tools.getLong(Tools.getRequestParameter(request, "score")).intValue();
+        String tags = Tools.getRequestParameter(request, "tags");
+        String comment = Tools.getRequestParameter(request, "comment");
+
         huDouService.saveCollection(bookId, customerId, score, comment, tags);
+
         response.setHeader("X-TESTCODE", "/Collection/save");
-        Tools.redirect(request.getContextPath() +"/Book/" + bookId, request, response);
+        Tools.redirect(request.getContextPath() + "/Book/" + bookId, request, response);
     }
 
     private void doRemove(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         Long customerId = Tools.getLong(Tools.getCookieValue(request, response, "customerId"));
-        Long bookId = Tools.getRequestLong(request, "bookId");
-        
+        Long bookId = Tools.getLong(Tools.getRequestParameter(request, "bookId"));
+
         huDouService.removeCollection(bookId, customerId);
-        
+
         response.setHeader("X-TESTCODE", "/Collection/remove");
-        Tools.redirect(request.getContextPath() +"/Book/" + bookId, request, response);
+        Tools.redirect(request.getContextPath() + "/Book/" + bookId, request, response);
     }
 }

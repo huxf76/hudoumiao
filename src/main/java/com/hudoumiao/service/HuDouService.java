@@ -7,10 +7,12 @@ package com.hudoumiao.service;
 import com.hudoumiao.entity.Book;
 import com.hudoumiao.entity.BookCollection;
 import com.hudoumiao.entity.Customer;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 
 /**
  *
@@ -23,8 +25,6 @@ public class HuDouService {
     private DaoBean daoBean;
     @EJB
     private DaoTxBean daoTxBean;
-    @PersistenceContext(unitName = "HuDouMiaoPU")
-    private EntityManager em;
     //
     private CacheManger cacheMgr = CacheManger.getInstance();
 
@@ -77,12 +77,7 @@ public class HuDouService {
     public BookCollection findBookCollection(Book book, Customer customer) {
         BookCollection collection = cacheMgr.getBookCollection(book, customer);
         if (collection != null) {
-            Long id = collection.getId();
-            if (id == null || id < 1) {
-                return null;
-            } else {
-                return collection;
-            }
+            return (BookCollection) getPersistObject(BookCollection.class, collection);
         }
         //
         collection = daoBean.findCollection(book, customer);
@@ -92,7 +87,8 @@ public class HuDouService {
             collection.setTagNames(daoBean.findTagNamesByBookCollection(collection));
         }
         cacheMgr.setBookCollection(book, customer, collection);
-        return collection;
+        //
+        return (BookCollection) getPersistObject(BookCollection.class, collection);
     }
 
     public void saveCollection(Long bookId, Long customerId, int score, String comment, String tags) {
@@ -104,7 +100,8 @@ public class HuDouService {
         if (book == null) {
             return;
         }
-        daoBean.saveCollection(book, customer, score, comment, tags);
+        BookCollection collection = daoBean.saveCollection(book, customer, score, comment);
+        daoBean.saveCollectionTag(collection, tags);
         //
         cacheMgr.deleteBook(book);
         cacheMgr.deleteCustomer(customer);
@@ -125,10 +122,29 @@ public class HuDouService {
             return;
         }
         daoBean.removeCollectionTags(bookCollection);
-        em.remove(bookCollection);
+        daoBean.removeCollection(bookCollection);
         //
         cacheMgr.deleteBook(book);
         cacheMgr.deleteCustomer(customer);
         cacheMgr.deleteBookCollection(book, customer);
+    }
+
+    private Object getPersistObject(Class clazz, Object obj) {
+        if (clazz == null || obj == null) {
+            return null;
+        }
+        try {
+            Method method = clazz.getMethod("getId");
+            Object invoke = method.invoke(obj, new Object[0]); // empty array for null input
+            if (invoke != null && invoke instanceof Long) {
+                Long id = (Long) invoke;
+                if (id > 0) {
+                    return obj;
+                }
+            }
+        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException ex) {
+            Logger.getLogger(HuDouService.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
     }
 }

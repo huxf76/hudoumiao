@@ -19,13 +19,18 @@ public class CacheManger {
     private static CacheManger instance = null;
     private static MemCachedClient mcc = null;
     private static boolean disabled = true;
+    private static boolean debug = false;
 
     private CacheManger() {
+        if (disabled) {
+            return;
+        }
         mcc = new MemCachedClient();
         String[] servers = {"10.31.160.97:11211"};
         SockIOPool pool = SockIOPool.getInstance();
         pool.setServers(servers);
         pool.initialize();
+
     }
 
     public static CacheManger getInstance() {
@@ -43,7 +48,7 @@ public class CacheManger {
         if (get == null) {
             return null;
         } else {
-            //System.out.println("Cached Book=" + bookId);
+            log("Cached Book=" + bookId);
             return (Book) get;
         }
     }
@@ -53,7 +58,7 @@ public class CacheManger {
             return;
         }
         boolean set = mcc.set("Book:" + book.getId(), book);
-        // System.out.println("Cache Book=" + book.getId() + " result=" + set);
+        log("Cache Book=" + book.getId() + " result=" + set);
     }
 
     public void deleteBook(Book book) {
@@ -61,7 +66,7 @@ public class CacheManger {
             return;
         }
         boolean delete = mcc.delete("Book:" + book.getId());
-        //System.out.println("Cache Delete Book=" + book.getId() + " result=" + delete);
+        log("Cache Delete Book=" + book.getId() + " result=" + delete);
     }
 
     public Customer getCustomer(Long id) {
@@ -70,7 +75,7 @@ public class CacheManger {
         }
         Customer customer = (Customer) mcc.get("Customer:" + id);
         if (customer != null) {
-            //System.out.println("Cached Customer:" + id);
+            log("Cached Customer:" + id);
         }
         return customer;
     }
@@ -80,7 +85,7 @@ public class CacheManger {
             return;
         }
         boolean set = mcc.set("Customer:" + customer.getId(), customer);
-        // System.out.println("Cache Customer=" + customer.getId() + " result=" + set);
+        log("Cache Customer=" + customer.getId() + " result=" + set);
     }
 
     public void deleteCustomer(Customer customer) {
@@ -88,7 +93,7 @@ public class CacheManger {
             return;
         }
         boolean delete = mcc.delete("Customer:" + customer.getId());
-        //System.out.println("Cache Delete Customer=" + customer.getId() + " result=" + delete);
+        log("Cache Delete Customer=" + customer.getId() + " result=" + delete);
     }
 
     public BookCollection getBookCollection(Book book, Customer customer) {
@@ -98,7 +103,7 @@ public class CacheManger {
         String cacheKey = "BookCollection:Book=" + book.getId() + "Customer" + customer.getId();
         BookCollection collection = (BookCollection) mcc.get(cacheKey);
         if (collection != null) {
-            //System.out.println("Cached " + cacheKey);
+            log("Cached " + cacheKey);
         }
         return collection;
     }
@@ -109,7 +114,7 @@ public class CacheManger {
         }
         String cacheKey = "BookCollection:Book=" + book.getId() + "Customer" + customer.getId();
         boolean set = mcc.set(cacheKey, collection);
-        //System.out.println("Cache BookCollection=" + cacheKey + " result=" + set);
+        log("Cache BookCollection=" + cacheKey + " result=" + set);
     }
 
     public void deleteBookCollection(Book book, Customer customer) {
@@ -118,6 +123,12 @@ public class CacheManger {
         }
         String cacheKey = "BookCollection:Book=" + book.getId() + "Customer" + customer.getId();
         boolean delete = mcc.delete(cacheKey);
-        //System.out.println("Cache Delete " + cacheKey + " result=" + delete);
+        log("Cache Delete " + cacheKey + " result=" + delete);
+    }
+
+    private void log(String msg) {
+        if (debug) {
+            System.out.println(msg);
+        }
     }
 }

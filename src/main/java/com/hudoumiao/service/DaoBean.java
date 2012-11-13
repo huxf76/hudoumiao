@@ -163,7 +163,50 @@ public class DaoBean {
         }
     }
 
-    public Tag findTag(String name) {
+    public void saveCollectionTag(BookCollection collection, String tags) {
+        String[] split = StringUtils.split(tags);
+        if (split == null || split.length == 0) {
+            return;
+        }
+        Set set = new HashSet(Arrays.asList(split)); // unique tag
+        for (Iterator it = set.iterator(); it.hasNext();) {
+            String name = (String) it.next();
+            Tag tag = getTagWithCreation(name);
+            saveCollectionTag(collection, tag);
+        }
+    }
+
+    public BookCollection saveCollection(Book book, Customer customer, int score, String comment) {
+        BookCollection bookCollection = findCollection(book, customer);
+        if (bookCollection == null) {
+            bookCollection = new BookCollection(score, comment, book, customer);
+            em.persist(bookCollection);
+        } else {
+            bookCollection.setScore(score);
+            bookCollection.setComment(comment);
+            em.merge(bookCollection);
+        }
+        return bookCollection;
+    }
+
+    public void removeCollectionTags(BookCollection collection) {
+        try {
+            Query query = em.createQuery("DELETE FROM CollectionTag ct WHERE ct.collection=:collection");
+            query.setParameter("collection", collection);
+            query.executeUpdate();
+        } catch (Exception ex) {
+        }
+    }
+
+    public void removeCollection(BookCollection collection) {
+        em.remove(collection);
+    }
+
+    /*
+     ********************************************************************
+     */
+    //
+    private Tag findTag(String name) {
         Tag tag;
         try {
             TypedQuery<Tag> query = em.createNamedQuery("Tag.findByName", Tag.class);
@@ -175,36 +218,8 @@ public class DaoBean {
         return tag;
     }
 
-    public CollectionTag findCollectionTag(BookCollection collection, Tag tag) {
-        CollectionTag collectionTag;
-        try {
-            TypedQuery<CollectionTag> query = em.createQuery("SELECT bc FROM CollectionTag bc WHERE bc.collection=:collection AND bc.tag=:tag", CollectionTag.class);
-            query.setParameter("collection", collection);
-            query.setParameter("tag", tag);
-            collectionTag = query.getSingleResult();
-        } catch (NoResultException ex) {
-            collectionTag = null;
-        }
-        return collectionTag;
-    }
-
-//    List<CollectionTag> findCollectionTagList(BookCollection collection) {
-//        TypedQuery<CollectionTag> query = em.createQuery("SELECT ct FROM CollectionTag ct WHERE ct.collection=:collection", CollectionTag.class);
-//        query.setParameter("collection", collection);
-//        return query.getResultList();
-//    }
-    public void removeCollectionTags(BookCollection collection) {
-        try {
-            Query query = em.createQuery("DELETE FROM CollectionTag ct WHERE ct.collection=:collection");
-            query.setParameter("collection", collection);
-            query.executeUpdate();
-        } catch (Exception ex) {
-        }
-    }
-
-   private Tag addGetTag(String name) {
+    private Tag getTagWithCreation(String name) {
         Tag tag = findTag(name);
-        // if not exist, create one. 
         if (tag == null) {
             return daoTxBean.createTag(name);
         }
@@ -220,26 +235,16 @@ public class DaoBean {
         return collectionTag;
     }
 
-    public void saveCollection(Book book, Customer customer, int score, String comment, String tags) {
-        BookCollection bookCollection = findCollection(book, customer);
-        if (bookCollection == null) {
-            bookCollection = new BookCollection(score, comment, book, customer);
-            em.persist(bookCollection);
-        } else {
-            bookCollection.setScore(score);
-            bookCollection.setComment(comment);
-            em.merge(bookCollection);
+    private CollectionTag findCollectionTag(BookCollection collection, Tag tag) {
+        CollectionTag collectionTag;
+        try {
+            TypedQuery<CollectionTag> query = em.createQuery("SELECT bc FROM CollectionTag bc WHERE bc.collection=:collection AND bc.tag=:tag", CollectionTag.class);
+            query.setParameter("collection", collection);
+            query.setParameter("tag", tag);
+            collectionTag = query.getSingleResult();
+        } catch (NoResultException ex) {
+            collectionTag = null;
         }
-        //
-        String[] split = StringUtils.split(tags);
-        if (split == null || split.length == 0) {
-            return;
-        }
-        Set set = new HashSet(Arrays.asList(split)); // unique tag
-        for (Iterator it = set.iterator(); it.hasNext();) {
-            String name = (String) it.next();
-            Tag tag = addGetTag(name);
-            saveCollectionTag(bookCollection, tag);
-        }
+        return collectionTag;
     }
 }

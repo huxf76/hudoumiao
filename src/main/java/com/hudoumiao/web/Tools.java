@@ -39,16 +39,6 @@ public class Tools {
         }
     }
 
-    public static String getRequestString(HttpServletRequest request, String param) throws ServletException, IOException {
-        String result = request.getParameter(param);
-        if (StringUtils.isBlank(result)) {
-            result = null;
-        } else {
-            result = result.trim();
-        }
-        return result;
-    }
-
     public static Integer getInteger(String str) {
         if (str == null) {
             return null;
@@ -60,11 +50,6 @@ public class Tools {
         }
     }
 
-    public static Integer getRequestInteger(HttpServletRequest request, String param) throws ServletException, IOException {
-        String str = getRequestString(request, param);
-        return getInteger(str);
-    }
-
     public static Boolean getBoolean(String str) {
         if (str == null) {
             return null;
@@ -72,23 +57,17 @@ public class Tools {
         return Boolean.valueOf(str);
     }
 
-    public static Boolean getRequestBoolean(HttpServletRequest request, String param) throws ServletException, IOException {
-        String str = getRequestString(request, param);
-        return getBoolean(str);
-    }
-
-    public static Boolean optRequestBoolean(HttpServletRequest request, String param, Boolean opt) throws ServletException, IOException {
-        String str = getRequestString(request, param);
-        Boolean result = getBoolean(str);
-        if (result == null) {
-            return opt;
+    public static String getRequestParameter(HttpServletRequest request, String param) throws ServletException, IOException {
+        if (StringUtils.isBlank(param)) {
+            return null;
+        }
+        String result = request.getParameter(param);
+        if (StringUtils.isBlank(result)) {
+            result = null;
+        } else {
+            result = result.trim();
         }
         return result;
-    }
-
-    public static Long getRequestLong(HttpServletRequest request, String param) throws ServletException, IOException {
-        String str = getRequestString(request, param);
-        return getLong(str);
     }
 
     public static String getPathInfoAt(HttpServletRequest request, int index) {
@@ -104,12 +83,6 @@ public class Tools {
             path = path.trim();
         }
         return path;
-    }
-
-    public static void randerPage(String url, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-        response.setContentType("text/html;charset=UTF-8");
-        RequestDispatcher requestDispatcher = request.getRequestDispatcher(url);
-        requestDispatcher.forward(request, response);
     }
 
     public static String getCookieValue(HttpServletRequest request, HttpServletResponse response, String cname) {
@@ -135,6 +108,12 @@ public class Tools {
         cookie.setPath("/");
         cookie.setMaxAge(0);
         response.addCookie(cookie);
+    }
+
+    public static void randerPage(String url, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+        response.setContentType("text/html;charset=UTF-8");
+        RequestDispatcher requestDispatcher = request.getRequestDispatcher(url);
+        requestDispatcher.forward(request, response);
     }
 
     public static void redirect(String url, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
